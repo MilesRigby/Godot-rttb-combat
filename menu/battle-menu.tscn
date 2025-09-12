@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dprj2lny61xjo"]
+
+[ext_resource type="Script" uid="uid://bk4072b8gayxk" path="res://menu/battle_menu.gd" id="1_sq4ll"]
+
+[node name="Battle-menu" type="Node2D"]
+script = ExtResource("1_sq4ll")

@@ -11,10 +11,10 @@ config_version=5
 [application]
 
 config/name="Real Time Turn Based RPG Combat System"
-run/main_scene="uid://cq2k20s5buuay"
+run/main_scene="uid://dprj2lny61xjo"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
-Combatants="*res://battle-data/combatants.gd"
+Combatants="*res://battle/battle-data/combatants.gd"

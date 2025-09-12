@@ -10,6 +10,7 @@ func slash(user, target):
 	print(damage)
 
 func _ready():
+	print("Arrived at battle")
 	slash(Combatants.playerCharacters[0], Combatants.enemies[0])
 	slash(Combatants.playerCharacters[0], Combatants.enemies[1])
 	slash(Combatants.enemies[0], Combatants.playerCharacters[0])
