@@ -14,3 +14,7 @@ config/name="Real Time Turn Based RPG Combat System"
 run/main_scene="uid://cq2k20s5buuay"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Combatants="*res://battle-data/combatants.gd"
