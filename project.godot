@@ -18,3 +18,4 @@ config/icon="res://icon.svg"
 [autoload]
 
 Combatants="*res://battle/battle-data/combatants.gd"
+EnemyCombatant="*res://global-entities-and-items/enemy_objects.gd"

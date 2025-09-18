@@ -1,17 +1,39 @@
 extends Node
 
-func slash(user, target):
-	var damage = user.stats.strength
-	damage *= 0.9 + randf()/5
-	damage = pow(damage, (1 + user.level/100.0))
-	damage /= pow((1 + target.stats.defence/100.0), 2)
-	if target.resistances.has("Slashing"):
-		damage *= 0.5
-	print(damage)
+var attacksDict = {
+	"slash": [{
+		damageType = "Slashing",
+		baseDamage = 1,
+		damageMin = 1,
+		damageMax = 1},],
+}
+
+func CalculateDamage(user, attack, target):
+	var totalDamage = 0
+
+	for damageSource in attacksDict[attack]:
+		var damage = 1
+
+		if (target.resistances.has(damageSource.damageType)):
+			damage -= 0.5
+
+		damage *= damageSource.baseDamage
+
+		damage *= randf_range(0, damageSource.damageMax-damageSource.damageMin) + (damageSource.damageMin+damageSource.damageMax)/2
+
+		totalDamage += damage
+
+	totalDamage *= pow(user.stats.strength, 1 + user.level/100.0)
+	totalDamage /= pow((1 + target.stats.defence/100.0), 2)
+
+	totalDamage = roundi(totalDamage)
+
+	return totalDamage
+
+		
 
 func _ready():
-	print("Arrived at battle")
-	slash(Combatants.playerCharacters[0], Combatants.enemies[0])
-	slash(Combatants.playerCharacters[0], Combatants.enemies[1])
-	slash(Combatants.enemies[0], Combatants.playerCharacters[0])
-	slash(Combatants.enemies[1], Combatants.playerCharacters[0])
+	print(CalculateDamage(Combatants.playerCharacters[0], "slash", Combatants.enemies[0]))
+	print(CalculateDamage(Combatants.playerCharacters[0], "slash", Combatants.enemies[1]))
+	print(CalculateDamage(Combatants.enemies[0], "slash", Combatants.playerCharacters[0]))
+	print(CalculateDamage(Combatants.enemies[1], "slash", Combatants.playerCharacters[0]))

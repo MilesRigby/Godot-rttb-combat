@@ -27,38 +27,8 @@ func _ready():
     ]
 
     Combatants.enemies = [
-		{
-			name = "Slime",
-			level = 1,
-			stats = {
-				vitality = 20,
-				defence = 10,
-				strength = 10,
-				agility = 30,
-				will = 0,
-				spirit = 10,
-				endurance = 30,
-				luck = 0,
-			},
-			skills = [],
-			resistances = ["Slashing"],
-		},
-		{
-			name = "Slime",
-			level = 3,
-			stats = {
-				vitality = 24,
-				defence = 12,
-				strength = 12,
-				agility = 12,
-				will = 0,
-				spirit = 12,
-				endurance = 36,
-				luck = 0,
-			},
-	    	skills = [],
-			resistances = ["Slashing"],
-		},
+		EnemyCombatant.Slime.new(1),
+		EnemyCombatant.Slime.new(3),
 	]
 
     call_deferred("_go_to_battle_scene")
@@ -66,5 +36,4 @@ func _ready():
 
 
 func _go_to_battle_scene():
-    print("leaving menu")
     get_tree().change_scene_to_file("res://battle/battle_scene.tscn")
