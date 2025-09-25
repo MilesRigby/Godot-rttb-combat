@@ -7,6 +7,7 @@ var timestep = 0.02
 
 var playerAttacks = [] # Attack being used by each player character/enemy
 var enemyAttacks = []
+var enemyNextAttacks = [] # Enemy attacks decided ahead of time, can be used to show the player what the enemy will do next
 
 var playerTargets = [] # Opponent being targeted by each player character/enemy
 var enemyTargets = []
@@ -33,10 +34,11 @@ func _ready():
 		playerTargets.append(0) # Negative value - no target
 
 		playerWindUps.append(0) # 0 for no upcoming attack
-		playerCooldowns.append(5*timestep) # timestep delay ensuring player acts immediately on battle start
+		playerCooldowns.append(timestep) # timestep delay ensuring player acts immediately on battle start
 
 	for enemy in Combatants.enemies:
 		enemyAttacks.append("")
+		enemyNextAttacks.append(enemy.skills[randi() % enemy.skills.size()])
 
 		enemyTargets.append(-1)
 
@@ -54,6 +56,7 @@ func BattleProcess():
 # One timestep (0.02 seconds) of the battle.
 func BattleStep():
 
+	print("\n\n\n\n\n\n\n\n\n\n\n\n") # 'Clears' console
 	print("Player health: " + str(Combatants.playerCharacters[0].health) + "; enemy health: " + str(Combatants.enemies[0].health) + "; wind up: " + str(playerWindUps[0]) + "; cooldown: " + str(playerCooldowns[0]))
 
 	var noneRemaining = true
@@ -163,12 +166,13 @@ func EnemyAttack(enemyNum):
 	Combatants.DamagePlayer(enemyTargets[enemyNum], damage)
 
 func SetEnemyAttack(enemyNum):
-	var attack = Combatants.enemies[enemyNum].skills[randi() % Combatants.enemies[enemyNum].skills.size()]
-	enemyAttacks[enemyNum] = attack
+	var nextAttack = Combatants.enemies[enemyNum].skills[randi() % Combatants.enemies[enemyNum].skills.size()]
+	enemyAttacks[enemyNum] = enemyNextAttacks[enemyNum]
+	enemyNextAttacks[enemyNum] = nextAttack
 	enemyTargets[enemyNum] = 0
 
-	var windUp = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseWindUp / sqrt(1 + Combatants.enemies[enemyNum].stats.strength), timestep)
-	var cooldown = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseCoolDown / sqrt(1 + Combatants.enemies[enemyNum].stats.agility), timestep)
+	var windUp = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[enemyAttacks[enemyNum]].baseWindUp / sqrt(1 + Combatants.enemies[enemyNum].stats.strength), timestep)
+	var cooldown = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[enemyAttacks[enemyNum]].baseCoolDown / sqrt(1 + Combatants.enemies[enemyNum].stats.agility), timestep)
 
 	# Ensure minimum time is 1 second, extending whichever part of the attack period is already longer
 	if windUp+cooldown < 1:

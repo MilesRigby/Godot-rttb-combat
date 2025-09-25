@@ -8,8 +8,8 @@ var attacksDict = {
 		components = [{
 			damageType = "Slashing",
 			baseDamage = 1,
-			damageMin = 1,
-			damageMax = 1},],
+			damageMin = 1.1,
+			damageMax = 0.9},],
 	},
 }
 
