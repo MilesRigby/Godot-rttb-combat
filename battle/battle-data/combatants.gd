@@ -12,3 +12,9 @@ extends Node
 var playerCharacters = []
 
 var enemies = []
+
+func DamagePlayer(player, damage):
+    playerCharacters[player].health = max(0, playerCharacters[player].health - damage)
+
+func DamageEnemy(enemy, damage):
+    enemies[enemy].health = max(0, enemies[enemy].health - damage)

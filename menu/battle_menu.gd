@@ -7,6 +7,7 @@ func _ready():
             name = "Jeff", #Player character name
             row = "front", #Front or back row in combat
             level = 1,
+            health = 100,
             stats = {
                 vitality = 10,
                 defence = 10,
@@ -17,7 +18,7 @@ func _ready():
                 endurance = 10,
                 luck = 10,
             },
-            strikes = [],
+            strikes = ["Slash"],
             skills = [], #Attacks are given as lists of attack names
             spells = [], #Definitions and processing handled elsewhere
             special = [],#Same for equipment

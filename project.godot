@@ -19,3 +19,5 @@ config/icon="res://icon.svg"
 
 Combatants="*res://battle/battle-data/combatants.gd"
 EnemyCombatant="*res://global-entities-and-items/enemy_objects.gd"
+AbilitiesManager="*res://global-entities-and-items/abilities_manager.gd"
+GlobalUtilities="*res://utility/global_utils.gd"

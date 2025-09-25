@@ -3,16 +3,17 @@ extends Node
 class Slime:
     var name: String
     var level: int
+    var health: int
     var stats: Dictionary
     var skills: Array
     var resistances: Array
 
     func _init(setLevel):
-        self.name = "Slime"
-        self.level = setLevel
+        name = "Slime"
+        level = setLevel
 
         var stat_determiner = setLevel-1
-        self.stats = {
+        stats = {
             vitality = 20 + 2*stat_determiner,
 			defence = 10 + stat_determiner,
 			strength = 10 + stat_determiner,
@@ -23,5 +24,6 @@ class Slime:
 			luck = 0,
         }
 
-        self.skills = []
-        self.resistances = ["Slashing"]
+        health = stats.vitality
+        skills = ["Slash"]
+        resistances = ["Slashing"]
