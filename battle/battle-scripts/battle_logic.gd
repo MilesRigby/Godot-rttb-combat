@@ -2,6 +2,7 @@
 
 extends Node2D
 
+# Time in seconds of each battle step, used for processing attack wind-ups and cooldowns
 var timestep = 0.02
 
 var playerAttacks = [] # Attack being used by each player character/enemy
@@ -15,11 +16,15 @@ var playerCooldowns = []
 var enemyWindUps = []
 var enemyCooldowns = []
 
+# The active player and whether they are in an active menu
 var playerNum
 var playerTurnActive = false
 
+# Tracks when the player wins/loses
 var battleEnd = false
 
+# Sets up player and enemy actions and cooldowns for use during the battle
+# Each array contains one entry per combatant of that type
 func _ready():
 
 	for playerCharacter in Combatants.playerCharacters:
@@ -49,7 +54,7 @@ func BattleProcess():
 # One timestep (0.02 seconds) of the battle.
 func BattleStep():
 
-	print("Enemy health: " + str(Combatants.enemies[0].health) + "; wind up: " + str(playerWindUps[0]) + "; cooldown: " + str(playerCooldowns[0]))
+	print("Player health: " + str(Combatants.playerCharacters[0].health) + "; enemy health: " + str(Combatants.enemies[0].health) + "; wind up: " + str(playerWindUps[0]) + "; cooldown: " + str(playerCooldowns[0]))
 
 	var noneRemaining = true
 
@@ -69,7 +74,7 @@ func BattleStep():
 	for i in range(0, Combatants.enemies.size()):
 		if Combatants.enemies[i].health > 0:
 			noneRemaining = false
-		#    ProcessEnemy(i)
+			ProcessEnemy(i)
 
 	if noneRemaining:
 		print("You Win!")
@@ -107,7 +112,7 @@ func StartPlayerTurn():
 
 	print("Available actions:")
 	for attackName in Combatants.playerCharacters[playerNum].strikes:
-		print(attackName)
+		print(attackName + "; ")
 
 func _input(_e):
 	if playerTurnActive && Input.is_action_just_pressed("ui_down"):
@@ -117,15 +122,60 @@ func _input(_e):
 func SetPlayerAttack(attack):
 	playerAttacks[playerNum] = attack
 	playerTargets[playerNum] = 0
+
 	var windUp = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseWindUp / sqrt(1 + Combatants.playerCharacters[playerNum].stats.strength), timestep)
-	var coolDown = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseCoolDown / sqrt(1 + Combatants.playerCharacters[playerNum].stats.agility), timestep)
+	var cooldown = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseCoolDown / sqrt(1 + Combatants.playerCharacters[playerNum].stats.agility), timestep)
 
 	# Ensure minimum time is 1 second, extending whichever part of the attack period is already longer
-	if windUp+coolDown < 1:
-		if (windUp < coolDown):
-			coolDown = 1 - windUp
+	if windUp+cooldown < 1:
+		if (windUp < cooldown):
+			cooldown = 1 - windUp
 		else:
-			windUp = 1 - coolDown
+			windUp = 1 - cooldown
 
 	playerWindUps[playerNum] = windUp
-	playerCooldowns[playerNum] = coolDown
+	playerCooldowns[playerNum] = cooldown
+
+# Determine whether the enemy is attacking or choosing their next attack
+func ProcessEnemy(enemyNum):
+
+	if enemyWindUps[enemyNum] >= timestep-0.0001:
+		enemyWindUps[enemyNum] -= timestep
+
+		if enemyWindUps[enemyNum] <= 0:
+			EnemyAttack(enemyNum)
+
+	elif enemyCooldowns[enemyNum] >= timestep-0.0001:
+		enemyCooldowns[enemyNum] -= timestep
+
+		if enemyCooldowns[enemyNum] <= 0:
+			SetEnemyAttack(enemyNum)
+
+# Evaluate the effect of the player attacking the enemy
+func EnemyAttack(enemyNum):
+
+	var attacker = Combatants.enemies[enemyNum]
+	var attack = enemyAttacks[enemyNum]
+	var target = Combatants.playerCharacters[enemyTargets[enemyNum]]
+
+	var damage = AbilitiesManager.CalculateDamage(attacker, attack, target)
+
+	Combatants.DamagePlayer(enemyTargets[enemyNum], damage)
+
+func SetEnemyAttack(enemyNum):
+	var attack = Combatants.enemies[enemyNum].skills[randi() % Combatants.enemies[enemyNum].skills.size()]
+	enemyAttacks[enemyNum] = attack
+	enemyTargets[enemyNum] = 0
+
+	var windUp = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseWindUp / sqrt(1 + Combatants.enemies[enemyNum].stats.strength), timestep)
+	var cooldown = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseCoolDown / sqrt(1 + Combatants.enemies[enemyNum].stats.agility), timestep)
+
+	# Ensure minimum time is 1 second, extending whichever part of the attack period is already longer
+	if windUp+cooldown < 1:
+		if (windUp < cooldown):
+			cooldown = 1 - windUp
+		else:
+			windUp = 1 - cooldown
+
+	enemyWindUps[enemyNum] = windUp
+	enemyCooldowns[enemyNum] = cooldown

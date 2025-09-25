@@ -28,7 +28,7 @@ func _ready():
     ]
 
     Combatants.enemies = [
-		EnemyCombatant.Slime.new(3),
+		EnemyCombatant.Slime.new(6),
 	]
 
     call_deferred("_go_to_battle_scene")
