@@ -171,7 +171,7 @@ func SetEnemyAttack(enemyNum):
 	var nextAttack = Combatants.enemies[enemyNum].skills[randi() % Combatants.enemies[enemyNum].skills.size()]
 	enemyAttacks[enemyNum] = enemyNextAttacks[enemyNum]
 	enemyNextAttacks[enemyNum] = nextAttack
-	enemyTargets[enemyNum] = 0
+	enemyTargets[enemyNum] = randi() % Combatants.playerCharacters.size()
 
 	var windUp = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[enemyAttacks[enemyNum]].baseWindUp / sqrt(1 + Combatants.enemies[enemyNum].stats.strength), timestep)
 	var cooldown = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[enemyAttacks[enemyNum]].baseCoolDown / sqrt(1 + Combatants.enemies[enemyNum].stats.agility), timestep)
