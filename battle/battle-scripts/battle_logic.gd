@@ -21,6 +21,10 @@ var enemyCooldowns = []
 var playerNum
 var playerTurnActive = false
 
+# Currently selected attack/enemy for player
+var attackOption
+var targetOption
+
 # Tracks when the player wins/loses
 var battleEnd = false
 
@@ -56,7 +60,7 @@ func BattleProcess():
 # One timestep (0.02 seconds) of the battle.
 func BattleStep():
 
-	print("\n\n\n\n\n\n\n\n\n\n\n\n") # 'Clears' console
+	print("\n\n") # 'Clears' console
 	var consoleInfo = "Enemies: \nHealth: \nAttack: \nTarget:  \nWind up: \nCooldown: \nNext: \nPlayers: \nHealth: \nAttack: \nTraget: \nWind up: \nCooldown:".split("\n")
 	for i in range(0, Combatants.enemies.size()):
 		consoleInfo[0] = consoleInfo[0] + "(" + str(i) + ") " + Combatants.enemies[i].name + " "
@@ -113,13 +117,13 @@ func ProcessPlayer():
 	if playerWindUps[playerNum] >= timestep-0.0001:
 		playerWindUps[playerNum] -= timestep
 
-		if playerWindUps[playerNum] <= 0:
+		if playerWindUps[playerNum] < 0.0001:
 			PlayerAttack()
 
 	elif playerCooldowns[playerNum] >= timestep-0.0001:
 		playerCooldowns[playerNum] -= timestep
 
-		if playerCooldowns[playerNum] <= 0:
+		if playerCooldowns[playerNum] < 0.0001:
 			StartPlayerTurn()
 
 # Evaluate the effect of the player attacking the enemy
@@ -136,14 +140,26 @@ func PlayerAttack():
 func StartPlayerTurn():
 	playerTurnActive = true
 
+	attackOption = 0
+
 	print("Available actions:")
 	for attackName in Combatants.playerCharacters[playerNum].strikes:
 		print(attackName + "; ")
 
 func _input(_e):
-	if playerTurnActive && Input.is_action_just_pressed("ui_down"):
-		SetPlayerAttack(Combatants.playerCharacters[playerNum].strikes[0])
-		playerTurnActive = false
+	if playerTurnActive:
+		if Input.is_action_just_pressed("ui_accept"):
+			SetPlayerAttack(Combatants.playerCharacters[playerNum].strikes[attackOption])
+			playerTurnActive = false
+		elif Input.is_action_just_pressed("ui_down"):
+			if attackOption + 1 < Combatants.playerCharacters[playerNum].strikes.size():
+				attackOption += 1
+			print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]))
+		elif Input.is_action_just_pressed("ui_up"):
+			if attackOption - 1 >= 0:
+				attackOption -= 1
+			print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]))
+
 
 func SetPlayerAttack(attack):
 	playerAttacks[playerNum] = attack
@@ -168,13 +184,13 @@ func ProcessEnemy(enemyNum):
 	if enemyWindUps[enemyNum] >= timestep-0.0001:
 		enemyWindUps[enemyNum] -= timestep
 
-		if enemyWindUps[enemyNum] <= 0:
+		if enemyWindUps[enemyNum] < 0.0001:
 			EnemyAttack(enemyNum)
 
 	elif enemyCooldowns[enemyNum] >= timestep-0.0001:
 		enemyCooldowns[enemyNum] -= timestep
 
-		if enemyCooldowns[enemyNum] <= 0:
+		if enemyCooldowns[enemyNum] < 0.0001:
 			SetEnemyAttack(enemyNum)
 
 # Evaluate the effect of the player attacking the enemy

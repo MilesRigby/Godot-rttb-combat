@@ -4,12 +4,22 @@ var attacksDict = {
 	"Slash": {
 		type = "Physical",
 		baseWindUp = 2,
-		baseCoolDown = 1,
+		baseCoolDown = 2,
 		components = [{
 			damageType = "Slashing",
 			baseDamage = 1,
-			damageMin = 1.1,
-			damageMax = 0.9},],
+			damageMin = 0.9,
+			damageMax = 1.1},],
+	},
+	"Edge Drive": {
+		type = "Physical",
+		baseWindUp = 6,
+		baseCoolDown = 4,
+		components = [{
+			damageType = "Impact",
+			baseDamage = 3,
+			damageMin = 0.5,
+			damageMax = 1.5},],
 	},
 }
 
