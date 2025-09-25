@@ -57,7 +57,28 @@ func BattleProcess():
 func BattleStep():
 
 	print("\n\n\n\n\n\n\n\n\n\n\n\n") # 'Clears' console
-	print("Player health: " + str(Combatants.playerCharacters[0].health) + "; enemy health: " + str(Combatants.enemies[0].health) + "; wind up: " + str(playerWindUps[0]) + "; cooldown: " + str(playerCooldowns[0]))
+	var consoleInfo = "Enemies: \nHealth: \nAttack: \nTarget:  \nWind up: \nCooldown: \nNext: \nPlayers: \nHealth: \nAttack: \nTraget: \nWind up: \nCooldown:".split("\n")
+	for i in range(0, Combatants.enemies.size()):
+		consoleInfo[0] = consoleInfo[0] + "(" + str(i) + ") " + Combatants.enemies[i].name + " "
+		consoleInfo[1] = consoleInfo[1] + "    " + str(Combatants.enemies[i].health) + " "
+		consoleInfo[2] = consoleInfo[2] + "    " + enemyAttacks[i] + " "
+		consoleInfo[3] = consoleInfo[3] + "    " + Combatants.playerCharacters[enemyTargets[i]].name + " "
+		consoleInfo[4] = consoleInfo[4] + "    " + str(enemyWindUps[i]) + " "
+		consoleInfo[5] = consoleInfo[5] + "  " + str(enemyCooldowns[i]) + "   "
+		consoleInfo[6] = consoleInfo[6] + "    " + enemyNextAttacks[i] + " "
+
+	for i in range(0, Combatants.playerCharacters.size()):
+		consoleInfo[7] = consoleInfo[7] + "(" + str(i) + ") " + Combatants.playerCharacters[i].name + " "
+		consoleInfo[8] = consoleInfo[8] + "    " + str(Combatants.playerCharacters[i].health) + " "
+		consoleInfo[9] = consoleInfo[9] + "    " + playerAttacks[i] + " "
+		consoleInfo[10] = consoleInfo[10] + "    " + str(playerTargets[i]) + " "
+		consoleInfo[11] = consoleInfo[11] + "    " + str(playerWindUps[i]) + " "
+		consoleInfo[12] = consoleInfo[12] + "  " + str(playerCooldowns[i]) + "   "
+
+	
+
+	consoleInfo = "\n".join(consoleInfo)
+	print(consoleInfo)
 
 	var noneRemaining = true
 
