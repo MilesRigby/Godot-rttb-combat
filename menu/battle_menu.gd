@@ -28,7 +28,6 @@ func _ready():
     ]
 
     Combatants.enemies = [
-		EnemyCombatant.Slime.new(1),
 		EnemyCombatant.Slime.new(3),
 	]
 

@@ -18,6 +18,8 @@ var enemyCooldowns = []
 var playerNum
 var playerTurnActive = false
 
+var battleEnd = false
+
 func _ready():
 
 	for playerCharacter in Combatants.playerCharacters:
@@ -39,7 +41,7 @@ func _ready():
 	BattleProcess()
 
 func BattleProcess():
-	while true:
+	while !battleEnd:
 		if !playerTurnActive:
 			BattleStep()
 		await get_tree().create_timer(timestep).timeout
@@ -49,12 +51,29 @@ func BattleStep():
 
 	print("Enemy health: " + str(Combatants.enemies[0].health) + "; wind up: " + str(playerWindUps[0]) + "; cooldown: " + str(playerCooldowns[0]))
 
-	for i in range(0, Combatants.playerCharacters.size()):
-		playerNum = i
-		ProcessPlayer()
+	var noneRemaining = true
 
-	#for i in range(0, Combatants.enemies.size()):
-	#    ProcessEnemy(i)
+	for i in range(0, Combatants.playerCharacters.size()):
+		if Combatants.playerCharacters[i].health > 0:
+			noneRemaining = false
+			playerNum = i
+			ProcessPlayer()
+
+	if noneRemaining:
+		print("You Lose!")
+		battleEnd = true
+
+
+	noneRemaining = true
+
+	for i in range(0, Combatants.enemies.size()):
+		if Combatants.enemies[i].health > 0:
+			noneRemaining = false
+		#    ProcessEnemy(i)
+
+	if noneRemaining:
+		print("You Win!")
+		battleEnd = true
 
 
 # Determine whether the player is attacking or choosing their next attack
@@ -90,7 +109,7 @@ func StartPlayerTurn():
 	for attackName in Combatants.playerCharacters[playerNum].strikes:
 		print(attackName)
 
-func _input(e):
+func _input(_e):
 	if playerTurnActive && Input.is_action_just_pressed("ui_down"):
 		SetPlayerAttack(Combatants.playerCharacters[playerNum].strikes[0])
 		playerTurnActive = false
@@ -101,6 +120,7 @@ func SetPlayerAttack(attack):
 	var windUp = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseWindUp / sqrt(1 + Combatants.playerCharacters[playerNum].stats.strength), timestep)
 	var coolDown = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseCoolDown / sqrt(1 + Combatants.playerCharacters[playerNum].stats.agility), timestep)
 
+	# Ensure minimum time is 1 second, extending whichever part of the attack period is already longer
 	if windUp+coolDown < 1:
 		if (windUp < coolDown):
 			coolDown = 1 - windUp
