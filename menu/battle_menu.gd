@@ -25,6 +25,28 @@ func _ready():
             equipment = [],
             resistances = [],
         },
+        {
+            name = "John", #Player character name
+            row = "front", #Front or back row in combat
+            level = 1,
+            health = 100,
+            stats = {
+                vitality = 10,
+                defence = 10,
+                strength = 10,
+                agility = 10,
+                will = 10,
+                spirit = 10,
+                endurance = 10,
+                luck = 10,
+            },
+            strikes = ["Slash"],
+            skills = [], #Attacks are given as lists of attack names
+            spells = [], #Definitions and processing handled elsewhere
+            special = [],#Same for equipment
+            equipment = [],
+            resistances = [],
+        },
     ]
 
     Combatants.enemies = [

@@ -64,6 +64,8 @@ func BattleStep():
 	for i in range(0, Combatants.playerCharacters.size()):
 		if Combatants.playerCharacters[i].health > 0:
 			noneRemaining = false
+			while playerTurnActive:
+				await get_tree().create_timer(timestep).timeout
 			playerNum = i
 			ProcessPlayer()
 
