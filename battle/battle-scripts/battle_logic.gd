@@ -1,5 +1,3 @@
-# TODO: figure out input (ui_down not being registered) and test current state of program
-
 extends Node2D
 
 # Time in seconds of each battle step, used for processing attack wind-ups and cooldowns
