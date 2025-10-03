@@ -20,6 +20,7 @@ var enemyCooldowns = []
 # The active player and whether they are in an active menu
 var playerNum
 var playerTurnActive = false
+var playerTurnPhase # The current phase of an active player turn. "Action type"; "Action"; "Target"
 
 # Currently selected attack/enemy for player
 var attackOption
@@ -146,8 +147,10 @@ func PlayerAttack():
 
 func StartPlayerTurn():
 	playerTurnActive = true
+	playerTurnPhase = "Ability"
 
 	attackOption = 0
+	targetOption = 0
 
 	print("Available actions:")
 	for attackName in Combatants.playerCharacters[playerNum].strikes:
@@ -155,23 +158,40 @@ func StartPlayerTurn():
 
 func _input(_e):
 	if playerTurnActive:
-		if Input.is_action_just_pressed("ui_accept") and AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility) < Combatants.playerCharacters[playerNum].stamina:
-			SetPlayerAttack(Combatants.playerCharacters[playerNum].strikes[attackOption])
-			Combatants.playerCharacters[playerNum].stamina = GlobalUtilities.arbitrary_round(Combatants.playerCharacters[playerNum].stamina - GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1), 0.1)
-			playerTurnActive = false
-		elif Input.is_action_just_pressed("ui_down"):
-			if attackOption + 1 < Combatants.playerCharacters[playerNum].strikes.size():
-				attackOption += 1
-			print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]) + "; Cost: " + str(GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1)))
-		elif Input.is_action_just_pressed("ui_up"):
-			if attackOption - 1 >= 0:
-				attackOption -= 1
-			print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]) + "; Cost: " + str(GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1)))
+		match playerTurnPhase:
+			"Ability":
+				if Input.is_action_just_pressed("ui_accept") and AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility) < Combatants.playerCharacters[playerNum].stamina:
+					playerTurnPhase = "Target"
+					print("Selected target: (" + str(targetOption) + ")")
+				elif Input.is_action_just_pressed("ui_down"):
+					if attackOption + 1 < Combatants.playerCharacters[playerNum].strikes.size():
+						attackOption += 1
+					print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]) + "; Cost: " + str(GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1)))
+				elif Input.is_action_just_pressed("ui_up"):
+					if attackOption - 1 >= 0:
+						attackOption -= 1
+					print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]) + "; Cost: " + str(GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1)))
+			"Target":
+				if Input.is_action_just_pressed("ui_text_backspace"):
+					playerTurnPhase = "Ability"
+					print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]) + "; Cost: " + str(GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1)))
+				elif Input.is_action_just_pressed("ui_accept") and Combatants.enemies[targetOption].health > 0:
+					SetPlayerAttack(Combatants.playerCharacters[playerNum].strikes[attackOption], targetOption)
+					Combatants.playerCharacters[playerNum].stamina = GlobalUtilities.arbitrary_round(Combatants.playerCharacters[playerNum].stamina - GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1), 0.1)
+					playerTurnActive = false
+				elif Input.is_action_just_pressed("ui_down"):
+					if targetOption + 1 < Combatants.enemies.size():
+						targetOption += 1
+					print("Selected target: (" + str(targetOption) + ")")
+				elif Input.is_action_just_pressed("ui_up"):
+					if targetOption - 1 >= 0: 
+						targetOption -= 1
+					print("Selected target: (" + str(targetOption) + ")")
 
 
-func SetPlayerAttack(attack):
+func SetPlayerAttack(attack, target):
 	playerAttacks[playerNum] = attack
-	playerTargets[playerNum] = 0
+	playerTargets[playerNum] = target
 
 	var windUp = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseWindUp / sqrt(1 + Combatants.playerCharacters[playerNum].stats.strength), timestep)
 	var cooldown = GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[attack].baseCoolDown / sqrt(1 + Combatants.playerCharacters[playerNum].stats.agility), timestep)
