@@ -61,7 +61,7 @@ func BattleProcess():
 func BattleStep():
 
 	print("\n\n") # 'Clears' console
-	var consoleInfo = "Enemies: \nHealth: \nAttack: \nTarget:  \nWind up: \nCooldown: \nNext: \nPlayers: \nHealth: \nAttack: \nTraget: \nWind up: \nCooldown:".split("\n")
+	var consoleInfo = "Enemies: \nHealth: \nAttack: \nTarget: \nWind up: \nCooldown: \nNext: \nPlayers: \nHealth: \nStamina: \nAttack: \nTraget: \nWind up: \nCooldown:".split("\n")
 	for i in range(0, Combatants.enemies.size()):
 		consoleInfo[0] = consoleInfo[0] + "(" + str(i) + ") " + Combatants.enemies[i].name + " "
 		consoleInfo[1] = consoleInfo[1] + "    " + str(Combatants.enemies[i].health) + " "
@@ -74,10 +74,11 @@ func BattleStep():
 	for i in range(0, Combatants.playerCharacters.size()):
 		consoleInfo[7] = consoleInfo[7] + "(" + str(i) + ") " + Combatants.playerCharacters[i].name + " "
 		consoleInfo[8] = consoleInfo[8] + "    " + str(Combatants.playerCharacters[i].health) + " "
-		consoleInfo[9] = consoleInfo[9] + "    " + playerAttacks[i] + " "
-		consoleInfo[10] = consoleInfo[10] + "    " + str(playerTargets[i]) + " "
-		consoleInfo[11] = consoleInfo[11] + "    " + str(playerWindUps[i]) + " "
-		consoleInfo[12] = consoleInfo[12] + "  " + str(playerCooldowns[i]) + "   "
+		consoleInfo[9] = consoleInfo[9] + "    " + str(Combatants.playerCharacters[i].stamina) + " "
+		consoleInfo[10] = consoleInfo[10] + "    " + playerAttacks[i] + " "
+		consoleInfo[11] = consoleInfo[11] + "    " + str(playerTargets[i]) + " "
+		consoleInfo[12] = consoleInfo[12] + "    " + str(playerWindUps[i]) + " "
+		consoleInfo[13] = consoleInfo[13] + "  " + str(playerCooldowns[i]) + "   "
 
 	
 
@@ -89,8 +90,14 @@ func BattleStep():
 	for i in range(0, Combatants.playerCharacters.size()):
 		if Combatants.playerCharacters[i].health > 0:
 			noneRemaining = false
+
+			# Wait for previous player to select their attack
 			while playerTurnActive:
 				await get_tree().create_timer(timestep).timeout
+
+			# Recover 5% of stamina per second
+			Combatants.playerCharacters[i].stamina = GlobalUtilities.arbitrary_round(min(Combatants.playerCharacters[i].stamina + timestep*5, 100), 0.1)
+			
 			playerNum = i
 			ProcessPlayer()
 
@@ -148,17 +155,18 @@ func StartPlayerTurn():
 
 func _input(_e):
 	if playerTurnActive:
-		if Input.is_action_just_pressed("ui_accept"):
+		if Input.is_action_just_pressed("ui_accept") and AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility) < Combatants.playerCharacters[playerNum].stamina:
 			SetPlayerAttack(Combatants.playerCharacters[playerNum].strikes[attackOption])
+			Combatants.playerCharacters[playerNum].stamina = GlobalUtilities.arbitrary_round(Combatants.playerCharacters[playerNum].stamina - GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1), 0.1)
 			playerTurnActive = false
 		elif Input.is_action_just_pressed("ui_down"):
 			if attackOption + 1 < Combatants.playerCharacters[playerNum].strikes.size():
 				attackOption += 1
-			print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]))
+			print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]) + "; Cost: " + str(GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1)))
 		elif Input.is_action_just_pressed("ui_up"):
 			if attackOption - 1 >= 0:
 				attackOption -= 1
-			print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]))
+			print("Selected action: " + str(Combatants.playerCharacters[playerNum].strikes[attackOption]) + "; Cost: " + str(GlobalUtilities.arbitrary_round(AbilitiesManager.attacksDict[Combatants.playerCharacters[playerNum].strikes[attackOption]].baseStaminaCost/sqrt(Combatants.playerCharacters[playerNum].stats.agility), 0.1)))
 
 
 func SetPlayerAttack(attack):

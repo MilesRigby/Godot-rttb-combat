@@ -8,6 +8,7 @@ func _ready():
             row = "front", #Front or back row in combat
             level = 1,
             health = 100,
+            stamina = 100,
             stats = {
                 vitality = 10,
                 defence = 10,
