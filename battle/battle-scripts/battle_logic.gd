@@ -18,11 +18,14 @@ var enemyCooldowns = []
 # The active player and whether they are in an active menu
 var playerNum
 var playerTurnActive = false
-var playerTurnPhase # The current phase of an active player turn. "Action type"; "Action"; "Target"
+var playerTurnPhase
 
 # Currently selected attack/enemy for player
 var attackOption
 var targetOption
+
+var playerTurns = []
+var enemyTurns = []
 
 # Tracks when the player wins/loses
 var battleEnd = false
@@ -30,6 +33,8 @@ var battleEnd = false
 # Sets up player and enemy actions and cooldowns for use during the battle
 # Each array contains one entry per combatant of that type
 func _ready():
+
+	Engine.physics_ticks_per_second = roundi(1/timestep)
 
 	for playerCharacter in Combatants.playerCharacters:
 		playerAttacks.append("") # Empty string - no attack
@@ -48,100 +53,53 @@ func _ready():
 		enemyWindUps.append(0)
 		enemyCooldowns.append(timestep)
 
-	BattleProcess()
-
-func BattleProcess():
-	while !battleEnd:
-		if !playerTurnActive:
-			BattleStep()
-		await get_tree().create_timer(timestep).timeout
-
-# One timestep (0.02 seconds) of the battle.
-func BattleStep():
-
-	print("\n\n") # 'Clears' console
-	var consoleInfo = "Enemies: \nHealth: \nAttack: \nTarget: \nWind up: \nCooldown: \nNext: \nPlayers: \nHealth: \nStamina: \nAttack: \nTraget: \nWind up: \nCooldown:".split("\n")
-	for i in range(0, Combatants.enemies.size()):
-		consoleInfo[0] = consoleInfo[0] + "(" + str(i) + ") " + Combatants.enemies[i].name + " "
-		consoleInfo[1] = consoleInfo[1] + "    " + str(Combatants.enemies[i].health) + " "
-		consoleInfo[2] = consoleInfo[2] + "    " + enemyAttacks[i] + " "
-		consoleInfo[3] = consoleInfo[3] + "    " + Combatants.playerCharacters[enemyTargets[i]].name + " "
-		consoleInfo[4] = consoleInfo[4] + "    " + str(enemyWindUps[i]) + " "
-		consoleInfo[5] = consoleInfo[5] + "  " + str(enemyCooldowns[i]) + "   "
-		consoleInfo[6] = consoleInfo[6] + "    " + enemyNextAttacks[i] + " "
-
-	for i in range(0, Combatants.playerCharacters.size()):
-		consoleInfo[7] = consoleInfo[7] + "(" + str(i) + ") " + Combatants.playerCharacters[i].name + " "
-		consoleInfo[8] = consoleInfo[8] + "    " + str(Combatants.playerCharacters[i].health) + " "
-		consoleInfo[9] = consoleInfo[9] + "    " + str(Combatants.playerCharacters[i].stamina) + " "
-		consoleInfo[10] = consoleInfo[10] + "    " + playerAttacks[i] + " "
-		consoleInfo[11] = consoleInfo[11] + "    " + str(playerTargets[i]) + " "
-		consoleInfo[12] = consoleInfo[12] + "    " + str(playerWindUps[i]) + " "
-		consoleInfo[13] = consoleInfo[13] + "  " + str(playerCooldowns[i]) + "   "
-
-	
-
-	consoleInfo = "\n".join(consoleInfo)
-	print(consoleInfo)
-
-	var noneRemaining = true
-
-	for i in range(0, Combatants.playerCharacters.size()):
-		if Combatants.playerCharacters[i].health > 0:
-			noneRemaining = false
-
-			# Wait for previous player to select their attack
-			while playerTurnActive:
-				await get_tree().create_timer(timestep).timeout
-
-			# Recover 5% of stamina per second
-			Combatants.playerCharacters[i].stamina = GlobalUtilities.arbitrary_round(min(Combatants.playerCharacters[i].stamina + timestep*5, 100), 0.1)
-			
-			playerNum = i
-			ProcessPlayer()
-
-	if noneRemaining:
-		print("You Lose!")
-		battleEnd = true
 
 
-	noneRemaining = true
+func _physics_process(_delta):
 
-	for i in range(0, Combatants.enemies.size()):
-		if Combatants.enemies[i].health > 0:
-			noneRemaining = false
-			ProcessEnemy(i)
+	if playerTurns.size() + enemyTurns.size() == 0:
 
-	if noneRemaining:
-		print("You Win!")
-		battleEnd = true
+		printInfo()
+
+		for i in range(0, Combatants.playerCharacters.size()):
+			if Combatants.playerCharacters[i].health > 0:
+				ProcessPlayer(i)
+
+		for i in range(0, Combatants.enemies.size()):
+			if Combatants.enemies[i].health > 0:
+				ProcessEnemy(i)
+
+	# Add processing of player and enemy turns when a player turn is not already active
+
+func ProcessPlayer(i):
+	if playerWindUps[i] > 0:
+		playerWindUps[i] = GlobalUtilities.arbitrary_round(playerWindUps[i] - timestep, timestep)
+		
+		if playerWindUps[i] == 0:
+			PlayerAttack(i)
 
 
-# Determine whether the player is attacking or choosing their next attack
-func ProcessPlayer():
-
-	if playerWindUps[playerNum] >= timestep-0.0001:
-		playerWindUps[playerNum] -= timestep
-
-		if playerWindUps[playerNum] < 0.0001:
-			PlayerAttack()
-
-	elif playerCooldowns[playerNum] >= timestep-0.0001:
-		playerCooldowns[playerNum] -= timestep
-
-		if playerCooldowns[playerNum] < 0.0001:
-			StartPlayerTurn()
+	elif playerCooldowns[i] > 0:
+		playerCooldowns[i] = GlobalUtilities.arbitrary_round(playerCooldowns[i] - timestep, timestep)
+		
+		if playerCooldowns[i] == 0:
+			playerTurns.append(i)
 
 # Evaluate the effect of the player attacking the enemy
-func PlayerAttack():
+func PlayerAttack(i):
 
-	var attacker = Combatants.playerCharacters[playerNum]
-	var attack = playerAttacks[playerNum]
-	var target = Combatants.enemies[playerTargets[playerNum]]
+	var attacker = Combatants.playerCharacters[i]
+	var attack = playerAttacks[i]
+	var target = Combatants.enemies[playerTargets[i]]
 
 	var damage = AbilitiesManager.CalculateDamage(attacker, attack, target)
 
-	Combatants.DamageEnemy(playerTargets[playerNum], damage)
+	Combatants.DamageEnemy(playerTargets[i], damage)
+
+	if !AllEnemiesDefeated():
+		playerTurnActive = false
+	else:
+		print("You win!")
 
 func StartPlayerTurn():
 	playerTurnActive = true
@@ -205,19 +163,20 @@ func SetPlayerAttack(attack, target):
 	playerCooldowns[playerNum] = cooldown
 
 # Determine whether the enemy is attacking or choosing their next attack
-func ProcessEnemy(enemyNum):
+func ProcessEnemy(i):
 
-	if enemyWindUps[enemyNum] >= timestep-0.0001:
-		enemyWindUps[enemyNum] -= timestep
+	if enemyWindUps[i] > 0:
+		enemyWindUps[i] = GlobalUtilities.arbitrary_round(enemyWindUps[i] - timestep, timestep)
+		
+		if playerWindUps[i] == 0:
+			EnemyAttack(i)
 
-		if enemyWindUps[enemyNum] < 0.0001:
-			EnemyAttack(enemyNum)
 
-	elif enemyCooldowns[enemyNum] >= timestep-0.0001:
-		enemyCooldowns[enemyNum] -= timestep
-
-		if enemyCooldowns[enemyNum] < 0.0001:
-			SetEnemyAttack(enemyNum)
+	elif enemyCooldowns[i] > 0:
+		enemyCooldowns[i] = GlobalUtilities.arbitrary_round(enemyCooldowns[i] - timestep, timestep)
+		
+		if enemyCooldowns[i] == 0:
+			enemyTurns.append(i)
 
 # Evaluate the effect of the player attacking the enemy
 func EnemyAttack(enemyNum):
@@ -229,6 +188,11 @@ func EnemyAttack(enemyNum):
 	var damage = AbilitiesManager.CalculateDamage(attacker, attack, target)
 
 	Combatants.DamagePlayer(enemyTargets[enemyNum], damage)
+
+	if !AllPlayersDefeated():
+		playerTurnActive = false
+	else:
+		print("You lose!")
 
 func SetEnemyAttack(enemyNum):
 	var nextAttack = Combatants.enemies[enemyNum].skills[randi() % Combatants.enemies[enemyNum].skills.size()]
@@ -248,3 +212,43 @@ func SetEnemyAttack(enemyNum):
 
 	enemyWindUps[enemyNum] = windUp
 	enemyCooldowns[enemyNum] = cooldown
+
+func printInfo():
+	print("\n\n") # 'Clears' console
+	var consoleInfo = "Enemies: \nHealth: \nAttack: \nTarget: \nWind up: \nCooldown: \nNext: \nPlayers: \nHealth: \nStamina: \nAttack: \nTraget: \nWind up: \nCooldown:".split("\n")
+	for i in range(0, Combatants.enemies.size()):
+		consoleInfo[0] = consoleInfo[0] + "(" + str(i) + ") " + Combatants.enemies[i].name + " "
+		consoleInfo[1] = consoleInfo[1] + "    " + str(Combatants.enemies[i].health) + " "
+		consoleInfo[2] = consoleInfo[2] + "    " + enemyAttacks[i] + " "
+		consoleInfo[3] = consoleInfo[3] + "    " + Combatants.playerCharacters[enemyTargets[i]].name + " "
+		consoleInfo[4] = consoleInfo[4] + "    " + str(enemyWindUps[i]) + " "
+		consoleInfo[5] = consoleInfo[5] + "  " + str(enemyCooldowns[i]) + "   "
+		consoleInfo[6] = consoleInfo[6] + "    " + enemyNextAttacks[i] + " "
+
+	for i in range(0, Combatants.playerCharacters.size()):
+		consoleInfo[7] = consoleInfo[7] + "(" + str(i) + ") " + Combatants.playerCharacters[i].name + " "
+		consoleInfo[8] = consoleInfo[8] + "    " + str(Combatants.playerCharacters[i].health) + " "
+		consoleInfo[9] = consoleInfo[9] + "    " + str(Combatants.playerCharacters[i].stamina) + " "
+		consoleInfo[10] = consoleInfo[10] + "    " + playerAttacks[i] + " "
+		consoleInfo[11] = consoleInfo[11] + "    " + str(playerTargets[i]) + " "
+		consoleInfo[12] = consoleInfo[12] + "    " + str(playerWindUps[i]) + " "
+		consoleInfo[13] = consoleInfo[13] + "  " + str(playerCooldowns[i]) + "   "
+
+	consoleInfo = "\n".join(consoleInfo)
+	print(consoleInfo)
+
+func AllEnemiesDefeated() -> bool:
+
+	for i in range(0, Combatants.enemies.size()):
+		if Combatants.enemies[i].health != 0:
+			return false
+
+	return true
+
+func AllPlayersDefeated() -> bool:
+
+	for i in range(0, Combatants.playerCharacters.size()):
+		if Combatants.playerCharacters[i].health != 0:
+			return false
+
+	return true
