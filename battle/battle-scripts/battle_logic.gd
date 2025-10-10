@@ -42,7 +42,7 @@ func _ready():
 		playerTargets.append(0) # Negative value - no target
 
 		playerWindUps.append(0) # 0 for no upcoming attack
-		playerCooldowns.append(timestep) # timestep delay ensuring player acts immediately on battle start
+		playerCooldowns.append(timestep*5) # timestep delay ensuring player acts immediately on battle start
 
 	for enemy in Combatants.enemies:
 		enemyAttacks.append("")
@@ -51,7 +51,7 @@ func _ready():
 		enemyTargets.append(-1)
 
 		enemyWindUps.append(0)
-		enemyCooldowns.append(timestep)
+		enemyCooldowns.append(timestep*2)
 
 
 
@@ -70,6 +70,7 @@ func _physics_process(_delta):
 				ProcessEnemy(i)
 
 	# Add processing of player and enemy turns when a player turn is not already active
+
 
 func ProcessPlayer(i):
 	if playerWindUps[i] > 0:
