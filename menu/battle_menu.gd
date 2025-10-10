@@ -3,34 +3,14 @@ extends Node2D
 func _ready():
 
     Combatants.playerCharacters = [
-        {
-            name = "Jeff", #Player character name
-            row = "front", #Front or back row in combat
-            level = 1,
-            health = 100,
-            stamina = 100,
-            stats = {
-                vitality = 10,
-                defence = 10,
-                strength = 10,
-                agility = 10,
-                will = 10,
-                spirit = 10,
-                endurance = 10,
-                luck = 10,
-            },
-            strikes = ["Slash", "Edge Drive"],
-            skills = [], #Attacks are given as lists of attack names
-            spells = [], #Definitions and processing handled elsewhere
-            special = [],#Same for equipment
-            equipment = [],
-            resistances = [],
-        },
+        PlayerObjects.Player.new("John", 10, "Warrior")
     ]
 
+    Combatants.playerCharacters[0].strikes = ["Slash", "Edge Drive"]
+
     Combatants.enemies = [
-		EnemyCombatant.Slime.new(1),
-        EnemyCombatant.Slime.new(1),
+		EnemyCombatant.Slime.new(10),
+        EnemyCombatant.Slime.new(10),
 	]
 
     call_deferred("_go_to_battle_scene")
