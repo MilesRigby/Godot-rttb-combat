@@ -42,7 +42,7 @@ func _ready():
 		playerTargets.append(0) # Negative value - no target
 
 		playerWindUps.append(0) # 0 for no upcoming attack
-		playerCooldowns.append(timestep*5) # timestep delay ensuring player acts immediately on battle start
+		playerCooldowns.append(timestep) # timestep delay ensuring player acts immediately on battle start
 
 	for enemy in Combatants.enemies:
 		enemyAttacks.append("")
@@ -51,23 +51,33 @@ func _ready():
 		enemyTargets.append(-1)
 
 		enemyWindUps.append(0)
-		enemyCooldowns.append(timestep*2)
+		enemyCooldowns.append(timestep)
 
 
 
 func _physics_process(_delta):
 
-	if playerTurns.size() + enemyTurns.size() == 0:
+	if !playerTurnActive:
 
-		printInfo()
+		for enemyNum in enemyTurns:
+			SetEnemyAttack(enemyNum)
+			enemyTurns.pop_front()
 
-		for i in range(0, Combatants.playerCharacters.size()):
-			if Combatants.playerCharacters[i].health > 0:
-				ProcessPlayer(i)
+		if playerTurns.size() > 0:
+			StartPlayerTurn(playerTurns[0])
+			playerTurns.pop_front()
 
-		for i in range(0, Combatants.enemies.size()):
-			if Combatants.enemies[i].health > 0:
-				ProcessEnemy(i)
+		else:
+
+			printInfo()
+
+			for i in range(0, Combatants.playerCharacters.size()):
+				if Combatants.playerCharacters[i].health > 0:
+					ProcessPlayer(i)
+
+			for i in range(0, Combatants.enemies.size()):
+				if Combatants.enemies[i].health > 0:
+					ProcessEnemy(i)
 
 	# Add processing of player and enemy turns when a player turn is not already active
 
@@ -102,7 +112,9 @@ func PlayerAttack(i):
 	else:
 		print("You win!")
 
-func StartPlayerTurn():
+func StartPlayerTurn(i):
+	playerNum = i
+
 	playerTurnActive = true
 	playerTurnPhase = "Ability"
 
@@ -110,7 +122,7 @@ func StartPlayerTurn():
 	targetOption = 0
 
 	print("Available actions:")
-	for attackName in Combatants.playerCharacters[playerNum].strikes:
+	for attackName in Combatants.playerCharacters[i].strikes:
 		print(attackName + "; ")
 
 func _input(_e):
@@ -169,7 +181,7 @@ func ProcessEnemy(i):
 	if enemyWindUps[i] > 0:
 		enemyWindUps[i] = GlobalUtilities.arbitrary_round(enemyWindUps[i] - timestep, timestep)
 		
-		if playerWindUps[i] == 0:
+		if enemyWindUps[i] == 0:
 			EnemyAttack(i)
 
 
