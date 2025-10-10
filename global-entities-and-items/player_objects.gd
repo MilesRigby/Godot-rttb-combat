@@ -42,7 +42,7 @@ class Player:
     func calcStat(stat: String):
 		
         var statDeterminer = Classes.classes[pClass][stat]
-        return (10 + statDeterminer) + pow(level/2.0, 2 + statDeterminer/20.0)
+        return roundi((10 + statDeterminer) + pow(level/2.0, 2 + statDeterminer/20.0))
 
     func takeDamage(damage: int):
         health = max(0, health-damage)
